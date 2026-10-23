@@ -1,0 +1,350 @@
+[
+ {
+  "kind": "client",
+  "source": "inherited:jonas-brain",
+  "payload": {
+   "name": "QuasarEdge Solutions",
+   "industry": "Healthcare Services",
+   "sub_industry": "Medical Device Development",
+   "size_employees": 42,
+   "annual_revenue_usd": 12000000,
+   "hq_city": "Austin",
+   "hq_state": "TX",
+   "cloud_maturity": "lift-and-shift",
+   "notable_trait": "Cultivates a proprietary MIMO firmware verification tool",
+   "primary_contact_role": "CTO",
+   "pain_points": [
+    "Flaky automated tests due to hardware variability in embedded firmware",
+    "Extended regression test cycles for time-critical medical software",
+    "Challenges integrating legacy on-prem test labs with cloud environments"
+   ],
+   "current_stack": [
+    "AWS EC2",
+    "Jenkins",
+    "Robot Framework",
+    "GitLab CI",
+    "MySQL"
+   ],
+   "budget_band_usd": "150000-200000"
+  }
+ },
+ {
+  "kind": "client",
+  "source": "inherited:jonas-brain",
+  "payload": {
+   "name": "VertexFresco Ltd",
+   "industry": "Retail",
+   "sub_industry": "E-commerce Platform",
+   "size_employees": 117,
+   "annual_revenue_usd": 45000000,
+   "hq_city": "Seattle",
+   "hq_state": "WA",
+   "cloud_maturity": "cloud-native",
+   "notable_trait": "Runs a microservices marketplace using open-source SaaS contracts",
+   "primary_contact_role": "VP of QA Engineering",
+   "pain_points": [
+    "Non-deterministic API load-test results due to autoscaling",
+    "Flaky network-dependent end-to-end tests",
+    "Data-privacy compliance hurdles across U.S. and EU test environments"
+   ],
+   "current_stack": [
+    "AWS Lambda",
+    "Kubernetes (EKS)",
+    "GitHub Actions",
+    "Selenium Grid",
+    "PostgreSQL",
+    "Elastic Load Balancer"
+   ],
+   "budget_band_usd": "250000-350000"
+  }
+ },
+ {
+  "kind": "client",
+  "source": "inherited:jonas-brain",
+  "payload": {
+   "name": "BrightLeaf AgroBio",
+   "industry": "AgroTech",
+   "sub_industry": "Precision Farming Analytics",
+   "size_employees": 23,
+   "annual_revenue_usd": 7000000,
+   "hq_city": "Madison",
+   "hq_state": "WI",
+   "cloud_maturity": "none",
+   "notable_trait": "Operates a solar-heated on-prem data center for analytics",
+   "primary_contact_role": "Director of Product",
+   "pain_points": [
+    "Limited bandwidth for sensor-data ingestion streams",
+    "Slow integration of AI pipelines into the main platform",
+    "Testing across multiple generations of hardware sensor models"
+   ],
+   "current_stack": [
+    "Python",
+    "TensorFlow",
+    "Fly.io",
+    "MongoDB",
+    "Docker"
+   ],
+   "budget_band_usd": "50000-100000"
+  }
+ },
+ {
+  "kind": "client",
+  "source": "inherited:jonas-brain",
+  "payload": {
+   "name": "NimbusForge Interactive",
+   "industry": "Gaming",
+   "sub_industry": "Indie Game Development",
+   "size_employees": 67,
+   "annual_revenue_usd": 20000000,
+   "hq_city": "Portland",
+   "hq_state": "OR",
+   "cloud_maturity": "lift-and-shift",
+   "notable_trait": "Pushes the edge with a social VR prototype focused on mixed-reality streaming",
+   "primary_contact_role": "Lead QA Architect",
+   "pain_points": [
+    "Complex build pipelines for Windows, macOS, and Android releases",
+    "Performance regressions in WebGL across various browsers",
+    "Resource contention and stale state during automated gameplay tests"
+   ],
+   "current_stack": [
+    "Azure DevOps",
+    "Visual Studio",
+    "GameMaker Studio",
+    "Python",
+    "Redis",
+    "Jira"
+   ],
+   "budget_band_usd": "120000-180000"
+  }
+ },
+ {
+  "kind": "client",
+  "source": "inherited:jonas-brain",
+  "payload": {
+   "name": "Bytecraft Widgets",
+   "industry": "Software & Services",
+   "sub_industry": "IoT Device Control",
+   "size_employees": 32,
+   "annual_revenue_usd": 4800000,
+   "hq_city": "Raleigh",
+   "hq_state": "NC",
+   "cloud_maturity": "lift-and-shift",
+   "notable_trait": "Dedicated open-source contributor community",
+   "primary_contact_role": "Head of QA",
+   "pain_points": [
+    "Inconsistent test environments due to mixed on-prem and cloud assets",
+    "Manual creation of test data causing delays",
+    "Slow build pipeline with limited parallel execution"
+   ],
+   "current_stack": [
+    "Jenkins",
+    "Docker",
+    "GitHub",
+    "Selenium",
+    "Postman"
+   ],
+   "budget_band_usd": "75000-150000"
+  }
+ },
+ {
+  "kind": "client",
+  "source": "inherited:jonas-brain",
+  "payload": {
+   "name": "TruHarvest AgriTech",
+   "industry": "Technology",
+   "sub_industry": "AgriTech Analytics",
+   "size_employees": 18,
+   "annual_revenue_usd": 2800000,
+   "hq_city": "Denver",
+   "hq_state": "CO",
+   "cloud_maturity": "none",
+   "notable_trait": "Real-time drone imagery processing",
+   "primary_contact_role": "CTO",
+   "pain_points": [
+    "Legacy on-prem data warehouses impeding agile testing",
+    "Limited test coverage for AI model predictions",
+    "Regulatory compliance testing for data handling"
+   ],
+   "current_stack": [
+    "Redgate SQL Server Management Studio",
+    "RStudio",
+    "Tableau"
+   ],
+   "budget_band_usd": "30000-60000"
+  }
+ },
+ {
+  "kind": "client",
+  "source": "inherited:jonas-brain",
+  "payload": {
+   "name": "EchoVista Audio Solutions",
+   "industry": "Media & Entertainment",
+   "sub_industry": "Podcast Streaming",
+   "size_employees": 70,
+   "annual_revenue_usd": 9100000,
+   "hq_city": "San Francisco",
+   "hq_state": "CA",
+   "cloud_maturity": "cloud-native",
+   "notable_trait": "Real-time adaptive bitrate streaming",
+   "primary_contact_role": "Senior QA Engineer",
+   "pain_points": [
+    "End-to-end testing of media encoding pipelines",
+    "Load testing during hourly peak traffic",
+    "Multi-regional latency during content delivery"
+   ],
+   "current_stack": [
+    "Kubernetes",
+    "Terraform",
+    "GitLab",
+    "Datadog",
+    "Redis",
+    "Stripe"
+   ],
+   "budget_band_usd": "200000-400000"
+  }
+ },
+ {
+  "kind": "client",
+  "source": "inherited:jonas-brain",
+  "payload": {
+   "name": "NimbleBooks Finance",
+   "industry": "Finance",
+   "sub_industry": "Mobile Budgeting App",
+   "size_employees": 24,
+   "annual_revenue_usd": 3900000,
+   "hq_city": "Austin",
+   "hq_state": "TX",
+   "cloud_maturity": "lift-and-shift",
+   "notable_trait": "AI-powered expense categorisation",
+   "primary_contact_role": "Product Owner",
+   "pain_points": [
+    "Integration testing with heterogeneous banking APIs",
+    "Compliance testing for financial regulations",
+    "Detecting environment drift in continuous deployment"
+   ],
+   "current_stack": [
+    "Azure DevOps",
+    "AppDynamics",
+    "Okta",
+    "PostgreSQL",
+    "Kafka"
+   ],
+   "budget_band_usd": "120000-250000"
+  }
+ },
+ {
+  "kind": "client",
+  "source": "inherited:jonas-brain",
+  "payload": {
+   "name": "Velocitread Logistics",
+   "industry": "Transportation",
+   "sub_industry": "Last-Mile Delivery",
+   "size_employees": 145,
+   "annual_revenue_usd": 28000000,
+   "hq_city": "Indianapolis",
+   "hq_state": "IN",
+   "cloud_maturity": "lift-and-shift",
+   "notable_trait": "Operates a proprietary fleet of electric cargo bikes for urban centers.",
+   "primary_contact_role": "Director of Operations",
+   "pain_points": [
+    "High latency in route synchronization between drivers and dispatch",
+    "Difficulty integrating legacy inventory software with new cloud API",
+    "Lack of real-time visibility into battery health across the fleet"
+   ],
+   "current_stack": [
+    "AWS EC2",
+    "Microsoft SQL Server",
+    "Tableau",
+    "Oracle NetSuite"
+   ],
+   "budget_band_usd": "150,000 - 300,000"
+  }
+ },
+ {
+  "kind": "client",
+  "source": "inherited:jonas-brain",
+  "payload": {
+   "name": "SolaVista Agritech",
+   "industry": "Agriculture",
+   "sub_industry": "Vertical Farming",
+   "size_employees": 42,
+   "annual_revenue_usd": 6500000,
+   "hq_city": "Boulder",
+   "hq_state": "CO",
+   "cloud_maturity": "cloud-native",
+   "notable_trait": "Uses a unique hydroponic nutrient-cycling system patented by the founder.",
+   "primary_contact_role": "CTO",
+   "pain_points": [
+    "Sensor data ingestion spikes causing database timeouts",
+    "Inefficient automated alerting for pH level fluctuations",
+    "Complexity in managing multi-tenant dashboards for farm partners"
+   ],
+   "current_stack": [
+    "Google Kubernetes Engine",
+    "MongoDB",
+    "Terraform",
+    "React",
+    "Slack"
+   ],
+   "budget_band_usd": "50,000 - 120,000"
+  }
+ },
+ {
+  "kind": "client",
+  "source": "inherited:jonas-brain",
+  "payload": {
+   "name": "Oryx & Finch Boutique Law",
+   "industry": "Professional Services",
+   "sub_industry": "Intellectual Property Law",
+   "size_employees": 18,
+   "annual_revenue_usd": 4200000,
+   "hq_city": "Savannah",
+   "hq_state": "GA",
+   "cloud_maturity": "none",
+   "notable_trait": "Specializes exclusively in maritime and salvage law patents.",
+   "primary_contact_role": "Managing Partner",
+   "pain_points": [
+    "Physical file storage is reaching capacity in the main office",
+    "Unable to securely share large case folders with remote consultants",
+    "Manual billing process leads to significant leakage in billable hours"
+   ],
+   "current_stack": [
+    "Microsoft Word",
+    "QuickBooks Desktop",
+    "Local NAS Storage",
+    "Outlook"
+   ],
+   "budget_band_usd": "20,000 - 60,000"
+  }
+ },
+ {
+  "kind": "client",
+  "source": "inherited:jonas-brain",
+  "payload": {
+   "name": "KinetiCore Biometrics",
+   "industry": "Healthcare",
+   "sub_industry": "Wearable Diagnostics",
+   "size_employees": 310,
+   "annual_revenue_usd": 115000000,
+   "hq_city": "San Jose",
+   "hq_state": "CA",
+   "cloud_maturity": "cloud-native",
+   "notable_trait": "Produces a wearable that detects early-stage nerve inflammation via skin conductivity.",
+   "primary_contact_role": "VP of Engineering",
+   "pain_points": [
+    "HIPAA compliance auditing takes too many manual man-hours",
+    "CI/CD pipeline bottlenecks slowing down firmware release cycles",
+    "High cost of data egress when moving telemetry to analytics tools"
+   ],
+   "current_stack": [
+    "Azure DevOps",
+    "Snowflake",
+    "Datadog",
+    "Python",
+    "PostgreSQL",
+    "Salesforce"
+   ],
+   "budget_band_usd": "500,000 - 1,200,000"
+  }
+ }
+]

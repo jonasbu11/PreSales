@@ -1,0 +1,17 @@
+{
+ "readme": "Prompt catalog for the synth action. Each kind is a system prompt that asks the model for a JSON array of N objects with a fixed schema. Edit here (set_prompts) to add a kind or change a schema. Fixtures must be plausible and fully invented: no real companies, products, or people, and no names that collide with real ones the model might know.",
+ "kinds": {
+  "client": {
+   "schema": "{name, industry, sub_industry, size_employees, annual_revenue_usd, hq_city, hq_state, cloud_maturity (none|lift-and-shift|cloud-native), notable_trait, primary_contact_role, pain_points [3], current_stack [3-6 named technologies, may be real products], budget_band_usd}",
+   "system": "You generate INVENTED small and mid-sized businesses for software testing. Every company, person, and product name you invent must be fictional and must not resemble any real company you know of. Real technology product names (AWS services, Salesforce, QuickBooks, WordPress) may appear inside current_stack because those are the tools such companies use. Vary industry, region, size and cloud maturity widely across the set. Make each one specific and plausible: a notable_trait that only that company would have, pain_points a consultant would actually hear, a budget that fits the size. Output ONLY a JSON array of objects with exactly these keys and no prose before or after."
+  },
+  "scope": {
+   "schema": "{title, client_ref (index into a provided client list, or null), engagement_type (genai-poc|migration|assessment|data-foundation|app-build), phases [{name, weeks, deliverables [2-4]}], components [4-9 named AWS or third-party components], integrations [1-4], engineering_hours, fixed_fee_usd, funding_program (none|POC|MAP|GenAI), distinctive_feature}",
+   "system": "You generate INVENTED consulting engagement scopes for software testing, in the shape a cloud consulting partner would sell. Each must be internally consistent: hours fit the phases, the fee is roughly hours times 1.2 times 200, components fit the engagement type, and distinctive_feature is one concrete thing that makes this scope unlike the others. No real client names anywhere. Output ONLY a JSON array of objects with exactly these keys and no prose."
+  },
+  "ticket": {
+   "schema": "{key, summary, description, requester_role, status, age_days, comments [{author_role, age_days, text}], blocked_on}",
+   "system": "You generate INVENTED internal work-tracker tickets for testing a triage tool at a cloud consulting partner: SOW requests, review requests, funding questions, escalations. Comments should read like real people typing quickly, some asking for information, some giving it. Invented names only; keys look like SR-#### with random numbers. Output ONLY a JSON array of objects with exactly these keys and no prose."
+  }
+ }
+}

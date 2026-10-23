@@ -1,0 +1,28 @@
+[
+ {
+  "rules_version": 2,
+  "strip_level": "numbers-only",
+  "lineup_model": "public",
+  "trials": 12,
+  "hits": 2,
+  "hit_rate": 0.167,
+  "avg_lineup": 8,
+  "chance_rate": 0.125,
+  "lift_over_chance": 0.042,
+  "last_trial": "2026-09-16T14:10:32Z",
+  "origin": "jonas-brain v_strip_calibration, exported 2026-10-23"
+ },
+ {
+  "rules_version": 2,
+  "strip_level": "narrative",
+  "lineup_model": "public",
+  "trials": 2,
+  "hits": 2,
+  "hit_rate": 1.0,
+  "avg_lineup": 8,
+  "chance_rate": 0.125,
+  "lift_over_chance": 0.875,
+  "last_trial": "2026-09-15T20:34:41Z",
+  "origin": "jonas-brain v_strip_calibration, exported 2026-10-23"
+ }
+]

@@ -1,0 +1,6 @@
+{
+ "function_name": "",
+ "region": "",
+ "search_regions": ["us-east-1", "us-west-2", "us-east-2"],
+ "note": "Per user. Leave function_name empty and the skill discovers the Lambda by the app=strip-kit tag on first use, then writes it here."
+}

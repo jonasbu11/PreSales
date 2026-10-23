@@ -1,0 +1,55 @@
+{
+ "version": 2,
+ "readme": "Canonical de-identification rules for anything leaving for an outside model. Versioned: a rule change is a new version with a changelog line, and strip-lab measures each version separately in trials. Consumer skills read the current version from the strip-kit function (get_rules). Claude applies these itself, in session, because the material is confidential by definition and the strip cannot be delegated to an outside model.",
+ "rules": [
+  "Names of clients, companies, products, people, and places become neutral roles: the client, Vendor A, the reviewer. Never a pseudonym that preserves initials, syllable count, or industry flavour.",
+  "Email addresses, phone numbers, URLs, account ids, ticket keys, invoice numbers, and any identifier: removed, not masked.",
+  "INDUSTRY IS REMOVED, not generalized. \"The client\" carries no sector, no vertical, no regulatory hint. If the question turns on the sector, that question does not leave.",
+  "SIZE IS REMOVED. No employee count, revenue band, location count, or \"mid-sized\". If the question turns on scale, express it only as the hours or dollars the question is about.",
+  "DATA AND DOMAIN NOUNS ARE GENERIC. Vehicle telemetry, patient records, scanned filings, device signals, orders, claims: all become \"operational records\" or \"documents\". Named source systems become \"an existing line-of-business system\".",
+  "Dollar figures and hour counts stay when the question is about them, rounded to two significant figures. A figure that would match a public record is rounded harder or replaced with a range.",
+  "Dates become relative or coarse: next quarter, an eight-week engagement. Never a date that could match an announcement, a funding round, or a filing.",
+  "Engagement shape keeps only what the question depends on. Phase count, hours, and fee may stay; a named component stack, an uncommon integration, or a sequence only one client would have is collapsed to its generic class (a managed model service, a cloud warehouse, an ingestion pipeline).",
+  "Quoted text from a client, a transcript, an email, or a document is never sent verbatim; restate the point in plain terms.",
+  "The author's own drafts, authored prose, and anything in the firm's house style are restated neutrally, never sent as written.",
+  "Secrets, credentials, and internal system identifiers never go, even in a question about them.",
+  "After stripping, read the result once as an adversary with the client list in hand: if any two remaining details together would pick the client out of that list, remove one of them. The re-identification trials are the test of whether this step is being done honestly."
+ ],
+ "levels": {
+  "narrative": "The full rules list applies. Sends a prose description of the engagement. Calibrated separately (strip_level = narrative). FAILING on every version measured so far; see findings.",
+  "numbers-only": "Sends no prose about the engagement at all: only quantities and structure. Task rows as generic labels (design, build, integrate, test, document) with hours; load percentages; rate; fee; phase count and weeks; funding program as \"partner-funded\" or \"not funded\". No component names, no industry, no data domain, no deliverable names. This is the level LOE and budgetary-estimate consumers use, because their question is arithmetic and loading logic."
+ },
+ "acceptance": {
+  "min_trials": 12,
+  "max_lift_over_chance": 0.15,
+  "note": "A version is usable for client-shaped material only when calibration shows lift_over_chance at or under max_lift_over_chance across at least min_trials settled trials. Below min_trials the version is uncalibrated and client-shaped material stays home. An inherited calibration row stands in until local trials reach min_trials."
+ },
+ "threat_model": "The adversary is a person with web search and the client list in hand. The lineup therefore shows only what a searcher could find: name, industry, size, HQ, notable trait, public stack. It never shows budget, pain points, or contacts; lineup_model=full trials exist as an upper bound on leakage, not as the calibration.",
+ "findings": [
+  {
+   "date": "2026-09-15",
+   "note": "v2 narrative under the public lineup: 2 of 2 re-identified at medium confidence. The adversary rationales cite the engagement type itself: document intelligence maps to a law practice, a PoC on a managed model service maps to the one AWS shop. Narrative about an engagement is a fingerprint regardless of nouns."
+  },
+  {
+   "date": "2026-09-16",
+   "note": "numbers-only, rules v2, public lineup: 12 settled trials, 2 hits against a chance rate of 0.125, lift over chance 0.042 versus an acceptance bar of 0.15. Gate open for numbers-only. Confidence is anti-correlated with correctness on this level: the 4 high-confidence guesses were all wrong and the 2 hits were both medium. Adversary rationales are confabulated at all confidence levels, routinely citing stacks, headcounts and cities that appear nowhere in the payload. Treat a head's stated confidence on a numbers-only payload as noise."
+  }
+ ],
+ "changelog": [
+  {
+   "version": 1,
+   "date": "2026-09-15",
+   "note": "Seeded from the second-opinion strip step plus the two-head finding that engagement shape re-identifies a client with names gone (rules 3, 5, 6, 10 are the additions)."
+  },
+  {
+   "version": 2,
+   "date": "2026-09-15",
+   "note": "v1 re-identified 3 of 3 at high confidence against 8-lineups. Adversary rationales cited industry, size, and domain nouns every time. v2 removes all three outright instead of generalizing them, and collapses component stacks to generic classes. Cost: questions that turn on the sector or on domain specifics can no longer leave for an outside head; that is the finding, not a bug."
+  },
+  {
+   "version": 2,
+   "date": "2026-10-23",
+   "note": "Ported to strip-kit (Lambda + DynamoDB + Bedrock) from the original Supabase store with no rule changes; rule 10 reworded from a named author to 'the author'. The 2026-09-16 numbers-only calibration (12 trials, lift 0.042) is carried as an inherited row and stands until this deployment has 12 local trials."
+  }
+ ]
+}

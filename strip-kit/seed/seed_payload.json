@@ -1,0 +1,453 @@
+{
+ "action": "seed",
+ "rules": {
+  "version": 2,
+  "readme": "Canonical de-identification rules for anything leaving for an outside model. Versioned: a rule change is a new version with a changelog line, and strip-lab measures each version separately in trials. Consumer skills read the current version from the strip-kit function (get_rules). Claude applies these itself, in session, because the material is confidential by definition and the strip cannot be delegated to an outside model.",
+  "rules": [
+   "Names of clients, companies, products, people, and places become neutral roles: the client, Vendor A, the reviewer. Never a pseudonym that preserves initials, syllable count, or industry flavour.",
+   "Email addresses, phone numbers, URLs, account ids, ticket keys, invoice numbers, and any identifier: removed, not masked.",
+   "INDUSTRY IS REMOVED, not generalized. \"The client\" carries no sector, no vertical, no regulatory hint. If the question turns on the sector, that question does not leave.",
+   "SIZE IS REMOVED. No employee count, revenue band, location count, or \"mid-sized\". If the question turns on scale, express it only as the hours or dollars the question is about.",
+   "DATA AND DOMAIN NOUNS ARE GENERIC. Vehicle telemetry, patient records, scanned filings, device signals, orders, claims: all become \"operational records\" or \"documents\". Named source systems become \"an existing line-of-business system\".",
+   "Dollar figures and hour counts stay when the question is about them, rounded to two significant figures. A figure that would match a public record is rounded harder or replaced with a range.",
+   "Dates become relative or coarse: next quarter, an eight-week engagement. Never a date that could match an announcement, a funding round, or a filing.",
+   "Engagement shape keeps only what the question depends on. Phase count, hours, and fee may stay; a named component stack, an uncommon integration, or a sequence only one client would have is collapsed to its generic class (a managed model service, a cloud warehouse, an ingestion pipeline).",
+   "Quoted text from a client, a transcript, an email, or a document is never sent verbatim; restate the point in plain terms.",
+   "The author's own drafts, authored prose, and anything in the firm's house style are restated neutrally, never sent as written.",
+   "Secrets, credentials, and internal system identifiers never go, even in a question about them.",
+   "After stripping, read the result once as an adversary with the client list in hand: if any two remaining details together would pick the client out of that list, remove one of them. The re-identification trials are the test of whether this step is being done honestly."
+  ],
+  "levels": {
+   "narrative": "The full rules list applies. Sends a prose description of the engagement. Calibrated separately (strip_level = narrative). FAILING on every version measured so far; see findings.",
+   "numbers-only": "Sends no prose about the engagement at all: only quantities and structure. Task rows as generic labels (design, build, integrate, test, document) with hours; load percentages; rate; fee; phase count and weeks; funding program as \"partner-funded\" or \"not funded\". No component names, no industry, no data domain, no deliverable names. This is the level LOE and budgetary-estimate consumers use, because their question is arithmetic and loading logic."
+  },
+  "acceptance": {
+   "min_trials": 12,
+   "max_lift_over_chance": 0.15,
+   "note": "A version is usable for client-shaped material only when calibration shows lift_over_chance at or under max_lift_over_chance across at least min_trials settled trials. Below min_trials the version is uncalibrated and client-shaped material stays home. An inherited calibration row stands in until local trials reach min_trials."
+  },
+  "threat_model": "The adversary is a person with web search and the client list in hand. The lineup therefore shows only what a searcher could find: name, industry, size, HQ, notable trait, public stack. It never shows budget, pain points, or contacts; lineup_model=full trials exist as an upper bound on leakage, not as the calibration.",
+  "findings": [
+   {
+    "date": "2026-09-15",
+    "note": "v2 narrative under the public lineup: 2 of 2 re-identified at medium confidence. The adversary rationales cite the engagement type itself: document intelligence maps to a law practice, a PoC on a managed model service maps to the one AWS shop. Narrative about an engagement is a fingerprint regardless of nouns."
+   },
+   {
+    "date": "2026-09-16",
+    "note": "numbers-only, rules v2, public lineup: 12 settled trials, 2 hits against a chance rate of 0.125, lift over chance 0.042 versus an acceptance bar of 0.15. Gate open for numbers-only. Confidence is anti-correlated with correctness on this level: the 4 high-confidence guesses were all wrong and the 2 hits were both medium. Adversary rationales are confabulated at all confidence levels, routinely citing stacks, headcounts and cities that appear nowhere in the payload. Treat a head's stated confidence on a numbers-only payload as noise."
+   }
+  ],
+  "changelog": [
+   {
+    "version": 1,
+    "date": "2026-09-15",
+    "note": "Seeded from the second-opinion strip step plus the two-head finding that engagement shape re-identifies a client with names gone (rules 3, 5, 6, 10 are the additions)."
+   },
+   {
+    "version": 2,
+    "date": "2026-09-15",
+    "note": "v1 re-identified 3 of 3 at high confidence against 8-lineups. Adversary rationales cited industry, size, and domain nouns every time. v2 removes all three outright instead of generalizing them, and collapses component stacks to generic classes. Cost: questions that turn on the sector or on domain specifics can no longer leave for an outside head; that is the finding, not a bug."
+   },
+   {
+    "version": 2,
+    "date": "2026-10-23",
+    "note": "Ported to strip-kit (Lambda + DynamoDB + Bedrock) from the original Supabase store with no rule changes; rule 10 reworded from a named author to 'the author'. The 2026-09-16 numbers-only calibration (12 trials, lift 0.042) is carried as an inherited row and stands until this deployment has 12 local trials."
+   }
+  ]
+ },
+ "fixtures": [
+  {
+   "kind": "client",
+   "source": "inherited:jonas-brain",
+   "payload": {
+    "name": "QuasarEdge Solutions",
+    "industry": "Healthcare Services",
+    "sub_industry": "Medical Device Development",
+    "size_employees": 42,
+    "annual_revenue_usd": 12000000,
+    "hq_city": "Austin",
+    "hq_state": "TX",
+    "cloud_maturity": "lift-and-shift",
+    "notable_trait": "Cultivates a proprietary MIMO firmware verification tool",
+    "primary_contact_role": "CTO",
+    "pain_points": [
+     "Flaky automated tests due to hardware variability in embedded firmware",
+     "Extended regression test cycles for time-critical medical software",
+     "Challenges integrating legacy on-prem test labs with cloud environments"
+    ],
+    "current_stack": [
+     "AWS EC2",
+     "Jenkins",
+     "Robot Framework",
+     "GitLab CI",
+     "MySQL"
+    ],
+    "budget_band_usd": "150000-200000"
+   }
+  },
+  {
+   "kind": "client",
+   "source": "inherited:jonas-brain",
+   "payload": {
+    "name": "VertexFresco Ltd",
+    "industry": "Retail",
+    "sub_industry": "E-commerce Platform",
+    "size_employees": 117,
+    "annual_revenue_usd": 45000000,
+    "hq_city": "Seattle",
+    "hq_state": "WA",
+    "cloud_maturity": "cloud-native",
+    "notable_trait": "Runs a microservices marketplace using open-source SaaS contracts",
+    "primary_contact_role": "VP of QA Engineering",
+    "pain_points": [
+     "Non-deterministic API load-test results due to autoscaling",
+     "Flaky network-dependent end-to-end tests",
+     "Data-privacy compliance hurdles across U.S. and EU test environments"
+    ],
+    "current_stack": [
+     "AWS Lambda",
+     "Kubernetes (EKS)",
+     "GitHub Actions",
+     "Selenium Grid",
+     "PostgreSQL",
+     "Elastic Load Balancer"
+    ],
+    "budget_band_usd": "250000-350000"
+   }
+  },
+  {
+   "kind": "client",
+   "source": "inherited:jonas-brain",
+   "payload": {
+    "name": "BrightLeaf AgroBio",
+    "industry": "AgroTech",
+    "sub_industry": "Precision Farming Analytics",
+    "size_employees": 23,
+    "annual_revenue_usd": 7000000,
+    "hq_city": "Madison",
+    "hq_state": "WI",
+    "cloud_maturity": "none",
+    "notable_trait": "Operates a solar-heated on-prem data center for analytics",
+    "primary_contact_role": "Director of Product",
+    "pain_points": [
+     "Limited bandwidth for sensor-data ingestion streams",
+     "Slow integration of AI pipelines into the main platform",
+     "Testing across multiple generations of hardware sensor models"
+    ],
+    "current_stack": [
+     "Python",
+     "TensorFlow",
+     "Fly.io",
+     "MongoDB",
+     "Docker"
+    ],
+    "budget_band_usd": "50000-100000"
+   }
+  },
+  {
+   "kind": "client",
+   "source": "inherited:jonas-brain",
+   "payload": {
+    "name": "NimbusForge Interactive",
+    "industry": "Gaming",
+    "sub_industry": "Indie Game Development",
+    "size_employees": 67,
+    "annual_revenue_usd": 20000000,
+    "hq_city": "Portland",
+    "hq_state": "OR",
+    "cloud_maturity": "lift-and-shift",
+    "notable_trait": "Pushes the edge with a social VR prototype focused on mixed-reality streaming",
+    "primary_contact_role": "Lead QA Architect",
+    "pain_points": [
+     "Complex build pipelines for Windows, macOS, and Android releases",
+     "Performance regressions in WebGL across various browsers",
+     "Resource contention and stale state during automated gameplay tests"
+    ],
+    "current_stack": [
+     "Azure DevOps",
+     "Visual Studio",
+     "GameMaker Studio",
+     "Python",
+     "Redis",
+     "Jira"
+    ],
+    "budget_band_usd": "120000-180000"
+   }
+  },
+  {
+   "kind": "client",
+   "source": "inherited:jonas-brain",
+   "payload": {
+    "name": "Bytecraft Widgets",
+    "industry": "Software & Services",
+    "sub_industry": "IoT Device Control",
+    "size_employees": 32,
+    "annual_revenue_usd": 4800000,
+    "hq_city": "Raleigh",
+    "hq_state": "NC",
+    "cloud_maturity": "lift-and-shift",
+    "notable_trait": "Dedicated open-source contributor community",
+    "primary_contact_role": "Head of QA",
+    "pain_points": [
+     "Inconsistent test environments due to mixed on-prem and cloud assets",
+     "Manual creation of test data causing delays",
+     "Slow build pipeline with limited parallel execution"
+    ],
+    "current_stack": [
+     "Jenkins",
+     "Docker",
+     "GitHub",
+     "Selenium",
+     "Postman"
+    ],
+    "budget_band_usd": "75000-150000"
+   }
+  },
+  {
+   "kind": "client",
+   "source": "inherited:jonas-brain",
+   "payload": {
+    "name": "TruHarvest AgriTech",
+    "industry": "Technology",
+    "sub_industry": "AgriTech Analytics",
+    "size_employees": 18,
+    "annual_revenue_usd": 2800000,
+    "hq_city": "Denver",
+    "hq_state": "CO",
+    "cloud_maturity": "none",
+    "notable_trait": "Real-time drone imagery processing",
+    "primary_contact_role": "CTO",
+    "pain_points": [
+     "Legacy on-prem data warehouses impeding agile testing",
+     "Limited test coverage for AI model predictions",
+     "Regulatory compliance testing for data handling"
+    ],
+    "current_stack": [
+     "Redgate SQL Server Management Studio",
+     "RStudio",
+     "Tableau"
+    ],
+    "budget_band_usd": "30000-60000"
+   }
+  },
+  {
+   "kind": "client",
+   "source": "inherited:jonas-brain",
+   "payload": {
+    "name": "EchoVista Audio Solutions",
+    "industry": "Media & Entertainment",
+    "sub_industry": "Podcast Streaming",
+    "size_employees": 70,
+    "annual_revenue_usd": 9100000,
+    "hq_city": "San Francisco",
+    "hq_state": "CA",
+    "cloud_maturity": "cloud-native",
+    "notable_trait": "Real-time adaptive bitrate streaming",
+    "primary_contact_role": "Senior QA Engineer",
+    "pain_points": [
+     "End-to-end testing of media encoding pipelines",
+     "Load testing during hourly peak traffic",
+     "Multi-regional latency during content delivery"
+    ],
+    "current_stack": [
+     "Kubernetes",
+     "Terraform",
+     "GitLab",
+     "Datadog",
+     "Redis",
+     "Stripe"
+    ],
+    "budget_band_usd": "200000-400000"
+   }
+  },
+  {
+   "kind": "client",
+   "source": "inherited:jonas-brain",
+   "payload": {
+    "name": "NimbleBooks Finance",
+    "industry": "Finance",
+    "sub_industry": "Mobile Budgeting App",
+    "size_employees": 24,
+    "annual_revenue_usd": 3900000,
+    "hq_city": "Austin",
+    "hq_state": "TX",
+    "cloud_maturity": "lift-and-shift",
+    "notable_trait": "AI-powered expense categorisation",
+    "primary_contact_role": "Product Owner",
+    "pain_points": [
+     "Integration testing with heterogeneous banking APIs",
+     "Compliance testing for financial regulations",
+     "Detecting environment drift in continuous deployment"
+    ],
+    "current_stack": [
+     "Azure DevOps",
+     "AppDynamics",
+     "Okta",
+     "PostgreSQL",
+     "Kafka"
+    ],
+    "budget_band_usd": "120000-250000"
+   }
+  },
+  {
+   "kind": "client",
+   "source": "inherited:jonas-brain",
+   "payload": {
+    "name": "Velocitread Logistics",
+    "industry": "Transportation",
+    "sub_industry": "Last-Mile Delivery",
+    "size_employees": 145,
+    "annual_revenue_usd": 28000000,
+    "hq_city": "Indianapolis",
+    "hq_state": "IN",
+    "cloud_maturity": "lift-and-shift",
+    "notable_trait": "Operates a proprietary fleet of electric cargo bikes for urban centers.",
+    "primary_contact_role": "Director of Operations",
+    "pain_points": [
+     "High latency in route synchronization between drivers and dispatch",
+     "Difficulty integrating legacy inventory software with new cloud API",
+     "Lack of real-time visibility into battery health across the fleet"
+    ],
+    "current_stack": [
+     "AWS EC2",
+     "Microsoft SQL Server",
+     "Tableau",
+     "Oracle NetSuite"
+    ],
+    "budget_band_usd": "150,000 - 300,000"
+   }
+  },
+  {
+   "kind": "client",
+   "source": "inherited:jonas-brain",
+   "payload": {
+    "name": "SolaVista Agritech",
+    "industry": "Agriculture",
+    "sub_industry": "Vertical Farming",
+    "size_employees": 42,
+    "annual_revenue_usd": 6500000,
+    "hq_city": "Boulder",
+    "hq_state": "CO",
+    "cloud_maturity": "cloud-native",
+    "notable_trait": "Uses a unique hydroponic nutrient-cycling system patented by the founder.",
+    "primary_contact_role": "CTO",
+    "pain_points": [
+     "Sensor data ingestion spikes causing database timeouts",
+     "Inefficient automated alerting for pH level fluctuations",
+     "Complexity in managing multi-tenant dashboards for farm partners"
+    ],
+    "current_stack": [
+     "Google Kubernetes Engine",
+     "MongoDB",
+     "Terraform",
+     "React",
+     "Slack"
+    ],
+    "budget_band_usd": "50,000 - 120,000"
+   }
+  },
+  {
+   "kind": "client",
+   "source": "inherited:jonas-brain",
+   "payload": {
+    "name": "Oryx & Finch Boutique Law",
+    "industry": "Professional Services",
+    "sub_industry": "Intellectual Property Law",
+    "size_employees": 18,
+    "annual_revenue_usd": 4200000,
+    "hq_city": "Savannah",
+    "hq_state": "GA",
+    "cloud_maturity": "none",
+    "notable_trait": "Specializes exclusively in maritime and salvage law patents.",
+    "primary_contact_role": "Managing Partner",
+    "pain_points": [
+     "Physical file storage is reaching capacity in the main office",
+     "Unable to securely share large case folders with remote consultants",
+     "Manual billing process leads to significant leakage in billable hours"
+    ],
+    "current_stack": [
+     "Microsoft Word",
+     "QuickBooks Desktop",
+     "Local NAS Storage",
+     "Outlook"
+    ],
+    "budget_band_usd": "20,000 - 60,000"
+   }
+  },
+  {
+   "kind": "client",
+   "source": "inherited:jonas-brain",
+   "payload": {
+    "name": "KinetiCore Biometrics",
+    "industry": "Healthcare",
+    "sub_industry": "Wearable Diagnostics",
+    "size_employees": 310,
+    "annual_revenue_usd": 115000000,
+    "hq_city": "San Jose",
+    "hq_state": "CA",
+    "cloud_maturity": "cloud-native",
+    "notable_trait": "Produces a wearable that detects early-stage nerve inflammation via skin conductivity.",
+    "primary_contact_role": "VP of Engineering",
+    "pain_points": [
+     "HIPAA compliance auditing takes too many manual man-hours",
+     "CI/CD pipeline bottlenecks slowing down firmware release cycles",
+     "High cost of data egress when moving telemetry to analytics tools"
+    ],
+    "current_stack": [
+     "Azure DevOps",
+     "Snowflake",
+     "Datadog",
+     "Python",
+     "PostgreSQL",
+     "Salesforce"
+    ],
+    "budget_band_usd": "500,000 - 1,200,000"
+   }
+  }
+ ],
+ "prompts": {
+  "readme": "Prompt catalog for the synth action. Each kind is a system prompt that asks the model for a JSON array of N objects with a fixed schema. Edit here (set_prompts) to add a kind or change a schema. Fixtures must be plausible and fully invented: no real companies, products, or people, and no names that collide with real ones the model might know.",
+  "kinds": {
+   "client": {
+    "schema": "{name, industry, sub_industry, size_employees, annual_revenue_usd, hq_city, hq_state, cloud_maturity (none|lift-and-shift|cloud-native), notable_trait, primary_contact_role, pain_points [3], current_stack [3-6 named technologies, may be real products], budget_band_usd}",
+    "system": "You generate INVENTED small and mid-sized businesses for software testing. Every company, person, and product name you invent must be fictional and must not resemble any real company you know of. Real technology product names (AWS services, Salesforce, QuickBooks, WordPress) may appear inside current_stack because those are the tools such companies use. Vary industry, region, size and cloud maturity widely across the set. Make each one specific and plausible: a notable_trait that only that company would have, pain_points a consultant would actually hear, a budget that fits the size. Output ONLY a JSON array of objects with exactly these keys and no prose before or after."
+   },
+   "scope": {
+    "schema": "{title, client_ref (index into a provided client list, or null), engagement_type (genai-poc|migration|assessment|data-foundation|app-build), phases [{name, weeks, deliverables [2-4]}], components [4-9 named AWS or third-party components], integrations [1-4], engineering_hours, fixed_fee_usd, funding_program (none|POC|MAP|GenAI), distinctive_feature}",
+    "system": "You generate INVENTED consulting engagement scopes for software testing, in the shape a cloud consulting partner would sell. Each must be internally consistent: hours fit the phases, the fee is roughly hours times 1.2 times 200, components fit the engagement type, and distinctive_feature is one concrete thing that makes this scope unlike the others. No real client names anywhere. Output ONLY a JSON array of objects with exactly these keys and no prose."
+   },
+   "ticket": {
+    "schema": "{key, summary, description, requester_role, status, age_days, comments [{author_role, age_days, text}], blocked_on}",
+    "system": "You generate INVENTED internal work-tracker tickets for testing a triage tool at a cloud consulting partner: SOW requests, review requests, funding questions, escalations. Comments should read like real people typing quickly, some asking for information, some giving it. Invented names only; keys look like SR-#### with random numbers. Output ONLY a JSON array of objects with exactly these keys and no prose."
+   }
+  }
+ },
+ "inherited": [
+  {
+   "rules_version": 2,
+   "strip_level": "numbers-only",
+   "lineup_model": "public",
+   "trials": 12,
+   "hits": 2,
+   "hit_rate": 0.167,
+   "avg_lineup": 8,
+   "chance_rate": 0.125,
+   "lift_over_chance": 0.042,
+   "last_trial": "2026-09-16T14:10:32Z",
+   "origin": "jonas-brain v_strip_calibration, exported 2026-10-23"
+  },
+  {
+   "rules_version": 2,
+   "strip_level": "narrative",
+   "lineup_model": "public",
+   "trials": 2,
+   "hits": 2,
+   "hit_rate": 1.0,
+   "avg_lineup": 8,
+   "chance_rate": 0.125,
+   "lift_over_chance": 0.875,
+   "last_trial": "2026-09-15T20:34:41Z",
+   "origin": "jonas-brain v_strip_calibration, exported 2026-10-23"
+  }
+ ]
+}

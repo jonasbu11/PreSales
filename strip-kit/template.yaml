@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  strip-kit: de-identification rules store, synthetic fixtures, and re-identification
+  trials for material that leaves for an outside model. One Lambda, one table, Bedrock.
+
+Parameters:
+  DefaultModel:
+    Type: String
+    Default: us.amazon.nova-pro-v1:0
+    Description: Bedrock model id or inference profile used to generate fixtures. Verify it is
+      enabled in this account and region (aws bedrock list-inference-profiles) before deploy.
+  AdversaryModel:
+    Type: String
+    Default: us.amazon.nova-premier-v1:0
+    Description: Bedrock model used as the re-identification adversary. Use the strongest
+      non-Anthropic model the account can reach; a weak adversary under-reports leakage.
+  FunctionName:
+    Type: String
+    Default: strip-kit
+    Description: Lambda name. The skills discover it by this name or by the app=strip-kit tag.
+
+Resources:
+  Table:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - { AttributeName: pk, AttributeType: S }
+        - { AttributeName: sk, AttributeType: S }
+      KeySchema:
+        - { AttributeName: pk, KeyType: HASH }
+        - { AttributeName: sk, KeyType: RANGE }
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - { Key: app, Value: strip-kit }
+
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Ref FunctionName
+      CodeUri: lambda/
+      Handler: handler.handler
+      Runtime: python3.12
+      Architectures: [arm64]
+      Timeout: 180
+      MemorySize: 512
+      Environment:
+        Variables:
+          STRIP_TABLE: !Ref Table
+          DEFAULT_MODEL: !Ref DefaultModel
+          ADVERSARY_MODEL: !Ref AdversaryModel
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Table
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:InvokeModelWithResponseStream
+              Resource:
+                - arn:aws:bedrock:*::foundation-model/*
+                - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/*
+      Tags:
+        app: strip-kit
+
+Outputs:
+  FunctionName:
+    Value: !Ref Function
+  FunctionArn:
+    Value: !GetAtt Function.Arn
+  TableName:
+    Value: !Ref Table
