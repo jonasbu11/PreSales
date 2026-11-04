@@ -58,6 +58,16 @@ assert any(f["used_by"] for f in call(action="list_fixtures"))
 # lineup too small for a kind with few fixtures
 e = h.handler({"action": "strip_trial", "fixture_id": 1, "stripped": "x", "rules_version": 2, "lineup_size": 40}); assert "only" in e["error"]
 
+# request caps: rejected before any model call
+before = len(calls)
+e = h.handler({"action": "strip_trial", "fixture_id": 1, "stripped": "x", "rules_version": 2, "lineup_size": 51}); assert "lineup_size" in e["error"], e
+e = h.handler({"action": "strip_trial", "fixture_id": 1, "stripped": "x", "rules_version": 2, "lineup_size": 1}); assert "lineup_size" in e["error"], e
+e = h.handler({"action": "strip_trial", "fixture_id": 1, "stripped": "x" * (200 * 1024 + 1), "rules_version": 2, "level": "numbers-only"}); assert "limit is 204800" in e["error"], e
+e = h.handler({"action": "strip_trial", "fixture_id": 1, "stripped": ["not", "text"], "rules_version": 2}); assert "string" in e["error"], e
+e = h.handler({"action": "synth", "kind": "client", "n": 51}); assert "n must be" in e["error"], e
+e = h.handler({"action": "synth", "kind": "client", "n": 0}); assert "n must be" in e["error"], e
+assert len(calls) == before, "a capped request reached the model"
+
 # bump requires a note, creates v3, keeps v2 readable
 assert "note is required" in h.handler({"action": "bump_rules"})["error"]
 b = call(action="bump_rules", rules=rules["rules"] + ["New rule."], note="12 trials, lift 0.3; adversary cited X", cost="questions about X cannot leave")

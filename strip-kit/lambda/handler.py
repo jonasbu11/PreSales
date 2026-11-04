@@ -38,6 +38,12 @@ DEFAULT_MODEL = os.environ.get("DEFAULT_MODEL", "us.amazon.nova-pro-v1:0")
 ADVERSARY_MODEL = os.environ.get("ADVERSARY_MODEL", DEFAULT_MODEL)
 BACKEND = os.environ.get("STRIP_BACKEND", "dynamo")  # "memory" for tests
 
+# Request caps. Everything above these is rejected up front rather than burning the
+# 180s timeout on an oversized lineup, fixture batch or document.
+MAX_LINEUP = 50
+MAX_SYNTH_N = 50
+MAX_STRIPPED_BYTES = 200 * 1024
+
 
 # ---------------------------------------------------------------- storage
 
@@ -246,6 +252,8 @@ def synth(args):
     """Generate n fixtures of a kind. Batches of four; larger batches time out on light heads."""
     kind = args["kind"]
     n = int(args.get("n", 4))
+    if not 1 <= n <= MAX_SYNTH_N:
+        return {"error": f"n must be between 1 and {MAX_SYNTH_N}, got {n}"}
     cat = prompts()
     if "error" in cat:
         return cat
@@ -300,9 +308,16 @@ def strip_trial(args):
     kind = target["kind"]
     level = args.get("level", "narrative")
     size = int(args.get("lineup_size", 8))
+    if not 2 <= size <= MAX_LINEUP:
+        return {"error": f"lineup_size must be between 2 and {MAX_LINEUP}, got {size}"}
     lineup_model = args.get("lineup_model", "public")
     rules_version = int(args["rules_version"])
     stripped = args["stripped"]
+    if not isinstance(stripped, str):
+        return {"error": "stripped must be a string"}
+    nbytes = len(stripped.encode("utf-8"))
+    if nbytes > MAX_STRIPPED_BYTES:
+        return {"error": f"stripped is {nbytes} bytes; the limit is {MAX_STRIPPED_BYTES}"}
     model = args.get("model") or ADVERSARY_MODEL
 
     pool = [f for f in store().query("fixture")
