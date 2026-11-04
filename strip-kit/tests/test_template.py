@@ -31,4 +31,9 @@ assert set(ddb[0]["Action"]) == {"dynamodb:GetItem", "dynamodb:PutItem", "dynamo
 assert ddb[0]["Resource"] == {"GetAtt": ["Table", "Arn"]} or ddb[0]["Resource"] == {"GetAtt": "Table.Arn"}, ddb[0]["Resource"]
 print("ok: dynamodb statement is explicit and excludes Delete/Scan")
 
+tbl = res["Table"]
+assert tbl.get("DeletionPolicy") == "Retain" and tbl.get("UpdateReplacePolicy") == "Retain", \
+    "a stack delete or key-schema replace would destroy the calibration history"
+print("ok: table is retained on stack delete and replace")
+
 print("template checks passed")
