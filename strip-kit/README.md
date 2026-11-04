@@ -29,6 +29,17 @@ This loads rules v2, the prompt catalog, 12 invented client fixtures, and two in
 
 To change the seed, edit `seed/rules.json`, `seed/fixtures.json`, `seed/prompts.json` or `seed/inherited.json` and run `python3 seed/make_seed.py`.
 
+## Install as a Python package
+
+The handler is also packaged as `strip-kit` (Python 3.12+, depends on `boto3`). It installs as the package `strip_kit`; `lambda/` stays the SAM code directory.
+
+    pip install "git+https://github.com/jonasbu11/PreSales.git#subdirectory=strip-kit"
+
+    from strip_kit import handler
+    handler.handler({"action": "ping"})
+
+Tags `vX.Y.Z` publish the same build to PyPI through `.github/workflows/publish-strip-kit.yml` (Trusted Publishing, no stored token).
+
 ## Install the skills (per user)
 
 The skills live in this repo at `skills/strip` and `skills/strip-lab`, next to the other presales skills; install them the same way. Each user needs the AWS connector pointed at an account where the function is deployed. On first use the skill discovers the function by tag and writes `config.json`; set `function_name` and `region` by hand to skip discovery.
