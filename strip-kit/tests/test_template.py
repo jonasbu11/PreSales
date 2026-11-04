@@ -36,4 +36,8 @@ assert tbl.get("DeletionPolicy") == "Retain" and tbl.get("UpdateReplacePolicy") 
     "a stack delete or key-schema replace would destroy the calibration history"
 print("ok: table is retained on stack delete and replace")
 
+rce = fn.get("ReservedConcurrentExecutions")
+assert isinstance(rce, int) and 1 <= rce <= 10, f"concurrent Bedrock fan-out is unbounded: ReservedConcurrentExecutions={rce}"
+print(f"ok: function concurrency capped at {rce}")
+
 print("template checks passed")

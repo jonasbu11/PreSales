@@ -48,6 +48,7 @@ Resources:
       Architectures: [arm64]
       Timeout: 180
       MemorySize: 512
+      ReservedConcurrentExecutions: 5
       Environment:
         Variables:
           STRIP_TABLE: !Ref Table
