@@ -5,14 +5,31 @@
 [Jonas Bull] ([@jonasbu11](https://github.com/jonasbu11)) is the sole
 security maintainer for this project and handles all reports directly.
 
-## Supported versions
+## What this project protects
 
-Only the latest release receives security fixes.
+`strip` removes client and engagement identifiers from material before any of
+it is sent to an outside model. `strip-lab` calibrates those rules by running
+re-identification trials on Bedrock, and `strip-kit` is the Lambda + DynamoDB
+backend both skills call, deployed into the user's own AWS account via SAM.
 
-| Version | Supported |
-| ------- | --------- |
-| latest  | yes       |
-| older   | no        |
+The failure that matters is a **false negative**: an identifier survives
+stripping and reaches a third-party model. Everything below follows from that.
+
+## Threat model
+
+In scope:
+- Rules that miss an identifier class, or that a fixture can defeat
+- Calibration gate logic that opens on too few or unrepresentative trials
+- Over-broad IAM in the SAM template, or secrets/identifiers landing in logs
+- DynamoDB storage of raw or insufficiently stripped material
+- Injection through the material being stripped, reaching the rules engine
+- Anything letting `strip` run against a stale or tampered rule set
+
+Out of scope:
+- Compromise of the host AWS account itself
+- Third-party dependency bugs (report upstream)
+- Missing hardening headers with no demonstrable impact
+- Raw scanner output with no reproduction
 
 ## Reporting a vulnerability
 
