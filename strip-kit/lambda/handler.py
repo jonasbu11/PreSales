@@ -42,6 +42,7 @@ BACKEND = os.environ.get("STRIP_BACKEND", "dynamo")  # "memory" for tests
 # 180s timeout on an oversized lineup, fixture batch or document.
 MAX_LINEUP = 50
 MAX_SYNTH_N = 50
+SYNTH_BATCH = 4  # fixtures per model call; 4 fits comfortably inside one reply on light heads
 MAX_STRIPPED_BYTES = 200 * 1024
 
 
@@ -249,7 +250,12 @@ def set_prompts(args):
 
 
 def synth(args):
-    """Generate n fixtures of a kind. Batches of four; larger batches time out on light heads."""
+    """Generate n fixtures of a kind, SYNTH_BATCH per model call.
+
+    One call for all n silently truncated at max_tokens past roughly a dozen fixtures and
+    under-returned. Batching keeps every reply inside the token budget; a batch that comes
+    back short or unparseable stops the run and the fixtures already stored are reported.
+    """
     kind = args["kind"]
     n = int(args.get("n", 4))
     if not 1 <= n <= MAX_SYNTH_N:
@@ -260,18 +266,32 @@ def synth(args):
     spec = cat["kinds"].get(kind)
     if not spec:
         return {"error": f"unknown kind {kind}; add it with set_prompts"}
-    user = f"Generate exactly {n} objects. Schema: {spec['schema']}"
-    if args.get("context") is not None:
-        user += "\n\nContext (reference by index where the schema allows):\n" + json.dumps(args["context"])
     model = args.get("model") or DEFAULT_MODEL
-    txt = converse(spec["system"], user, model=model, temperature=0.9)
-    try:
-        objs = extract_json(txt)
-    except Exception as e:  # noqa: BLE001
-        return {"error": f"unparseable head reply: {e}", "head": txt[:2000]}
-    if isinstance(objs, dict):
-        objs = [objs]
-    ids = [_put_fixture(kind, o, model) for o in objs]
+    context = ""
+    if args.get("context") is not None:
+        context = "\n\nContext (reference by index where the schema allows):\n" + json.dumps(args["context"])
+    ids, objs = [], []
+    remaining = n
+    while remaining > 0:
+        k = min(SYNTH_BATCH, remaining)
+        user = f"Generate exactly {k} objects. Schema: {spec['schema']}" + context
+        txt = converse(spec["system"], user, model=model, temperature=0.9)
+        try:
+            batch = extract_json(txt)
+        except Exception as e:  # noqa: BLE001
+            return {"error": f"unparseable head reply after {len(ids)} of {n} fixtures: {e}",
+                    "head": txt[:2000], "ids": ids}
+        if isinstance(batch, dict):
+            batch = [batch]
+        batch = batch[:k]
+        for o in batch:
+            ids.append(_put_fixture(kind, o, model))
+            objs.append(o)
+        if len(batch) < k:
+            return {"error": f"head returned {len(batch)} of {k} requested; stored {len(ids)} of {n}",
+                    "kind": kind, "model": model, "ids": ids,
+                    "fixtures": [{"id": i, "payload": o} for i, o in zip(ids, objs)]}
+        remaining -= k
     return {"kind": kind, "model": model, "ids": ids,
             "fixtures": [{"id": i, "payload": o} for i, o in zip(ids, objs)]}
 

@@ -68,6 +68,12 @@ e = h.handler({"action": "synth", "kind": "client", "n": 51}); assert "n must be
 e = h.handler({"action": "synth", "kind": "client", "n": 0}); assert "n must be" in e["error"], e
 assert len(calls) == before, "a capped request reached the model"
 
+# synth batches server-side: 9 fixtures = 3 model calls (4, 4, 1), every one stored
+before = len(calls)
+s = call(action="synth", kind="client", n=9, context=[{"x": 1}])
+assert len(s["ids"]) == 9 and len(calls) - before == 3, (len(s["ids"]), len(calls) - before)
+assert len(call(action="list_fixtures", kind="client")) == 24
+
 # bump requires a note, creates v3, keeps v2 readable
 assert "note is required" in h.handler({"action": "bump_rules"})["error"]
 b = call(action="bump_rules", rules=rules["rules"] + ["New rule."], note="12 trials, lift 0.3; adversary cited X", cost="questions about X cannot leave")
