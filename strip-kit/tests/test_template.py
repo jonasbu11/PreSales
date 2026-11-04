@@ -40,4 +40,15 @@ rce = fn.get("ReservedConcurrentExecutions")
 assert isinstance(rce, int) and 1 <= rce <= 10, f"concurrent Bedrock fan-out is unbounded: ReservedConcurrentExecutions={rce}"
 print(f"ok: function concurrency capped at {rce}")
 
+bedrock = [st for st in stmts if any(a.startswith("bedrock:") for a in st["Action"])]
+assert len(bedrock) == 1, bedrock
+for r in bedrock[0]["Resource"]:
+    arn = r["Sub"] if isinstance(r, dict) else r
+    assert isinstance(arn, str) and arn.startswith("arn:aws:bedrock:"), arn
+    region = arn.replace("${AWS::Region}", "REGION").split(":")[3]
+    assert region == "REGION", f"Bedrock statement grants a wildcard region: {arn}"
+fm = [(r["Sub"] if isinstance(r, dict) else r) for r in bedrock[0]["Resource"] if "foundation-model" in str(r)]
+assert fm == ["arn:aws:bedrock:${AWS::Region}::foundation-model/*"], fm
+print("ok: bedrock statement is scoped to the stack region")
+
 print("template checks passed")

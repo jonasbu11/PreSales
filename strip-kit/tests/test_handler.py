@@ -55,6 +55,22 @@ g = call(action="check_gate", level="numbers-only"); assert g["status"] in ("cal
 assert len(call(action="list_trials", level="numbers-only")) == 12
 assert any(f["used_by"] for f in call(action="list_fixtures"))
 
+# adversary answers outside the lineup: rejected, never recorded as a settled trial
+# ({"candidate": 0} used to resolve to lineup_ids[-1] via Python's negative index and
+# count as a valid guess)
+real_fake = h.converse
+for bad in (0, -1, 9, 99):
+    h.converse = lambda system, user, model=None, max_tokens=4000, temperature=0.7, bad=bad: (
+        json.dumps({"candidate": bad, "confidence": "high", "rationale": "x"}) if "re-identification adversary" in system
+        else real_fake(system, user, model, max_tokens, temperature))
+    r = h.handler({"action": "strip_trial", "fixture_id": 1, "stripped": "fee 48000", "rules_version": 2, "level": "numbers-only"})
+    assert "error" in r and "candidate" in r["error"], (bad, r)
+    stored = [t for t in h.handler({"action": "list_trials", "limit": 1000}) if t["id"] == r["trial"]][0]
+    assert stored["error"] and stored["settled_at"] is None and stored["correct"] is None, (bad, stored)
+h.converse = real_fake
+assert len([t for t in call(action="list_trials", level="numbers-only") if t["settled_at"]]) == 12, "out-of-range answers must not settle"
+assert all(r["trials"] == 12 for r in call(action="calibration") if r["source"] == "local")
+
 # lineup too small for a kind with few fixtures
 e = h.handler({"action": "strip_trial", "fixture_id": 1, "stripped": "x", "rules_version": 2, "lineup_size": 40}); assert "only" in e["error"]
 
