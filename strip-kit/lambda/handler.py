@@ -30,6 +30,7 @@ import random
 import re
 import time
 import hashlib
+import uuid
 from decimal import Decimal
 
 TABLE = os.environ.get("STRIP_TABLE", "")
@@ -75,6 +76,13 @@ class MemoryStore:
             raise ConditionFailed(f"{item['pk']}/{item['sk']} is not at version {expected}")
         self.put(item)
 
+    def put_if_bump(self, item, expected):
+        """Replace an existing item only if its bump_id is `expected` (None: it has none)."""
+        cur = self.items.get((item["pk"], item["sk"]))
+        if cur is None or cur.get("bump_id") != expected:
+            raise ConditionFailed(f"{item['pk']}/{item['sk']} is not the doc of bump {expected}")
+        self.put(item)
+
     def query(self, pk):
         return sorted(
             (v for (p, _), v in self.items.items() if p == pk),
@@ -110,8 +118,16 @@ class DynamoStore:
         self._put_cond(item, ConditionExpression="attribute_not_exists(pk)")
 
     def put_if_version(self, item, expected):
-        self._put_cond(item, ConditionExpression="version = :v",
+        self._put_cond(item, ConditionExpression="#v = :v",
+                       ExpressionAttributeNames={"#v": "version"},
                        ExpressionAttributeValues={":v": expected})
+
+    def put_if_bump(self, item, expected):
+        if expected is None:
+            self._put_cond(item, ConditionExpression="attribute_exists(pk) AND attribute_not_exists(bump_id)")
+        else:
+            self._put_cond(item, ConditionExpression="bump_id = :b",
+                           ExpressionAttributeValues={":b": expected})
 
     def query(self, pk):
         from boto3.dynamodb.conditions import Key
@@ -197,11 +213,21 @@ def sha1(s):
 
 # ---------------------------------------------------------------- rules
 
-def get_rules(args=None):
+def _current():
+    """(version, doc item) for rules/current, or (None, error dict)."""
     cur = store().get("rules", "current")
     if not cur:
-        return {"error": "no rules seeded"}
-    return store().get("rules", _sk(cur["version"]))["doc"]
+        return None, {"error": "no rules seeded"}
+    v = int(cur["version"])
+    item = store().get("rules", _sk(v))
+    if not item:
+        return None, {"error": f"rules/current points at missing version {v}"}
+    return v, item
+
+
+def get_rules(args=None):
+    v, item = _current()
+    return item if v is None else item["doc"]
 
 
 def get_rules_version(args):
@@ -210,42 +236,72 @@ def get_rules_version(args):
 
 
 BUMP_ATTEMPTS = 5
+BUMP_SETTLE_S = 0.25  # wait before treating a foreign rules/<n+1> with no pointer to it as an orphan
+_sleep = time.sleep
+
+
+def _next_doc(doc, args):
+    new = json.loads(json.dumps(doc))
+    new["version"] = doc["version"] + 1
+    for k in ("rules", "levels", "acceptance"):
+        if k in args:
+            new[k] = args[k]
+    entry = {"version": new["version"], "date": time.strftime("%Y-%m-%d"), "note": args["note"]}
+    if args.get("cost"):
+        entry["cost"] = args["cost"]
+    new.setdefault("changelog", []).append(entry)
+    return new, entry
 
 
 def bump_rules(args):
     """New version. Never edits in place. `note` is required and goes to the changelog.
 
-    Two bumps racing on the same base version used to both write the same sk and the
-    loser's rules and changelog entry vanished. The new version doc is written only if
-    absent, and rules/current only if it still points at the version that was read;
-    a failed condition re-reads and retries so the second bump lands as base+2.
+    A bump is two writes: the version doc rules/<n+1>, then rules/current n -> n+1, each
+    conditional. Every doc carries the bump_id of the call that wrote it, and a bump
+    succeeds only when rules/current has reached its version and the doc there is its own.
+
+    On a failed condition the bump re-reads rules/current and looks at rules/<n+1>:
+    - current advanced: recompute from the new base.
+    - rules/<n+1> is this call's own doc (the doc landed, the pointer move did not): skip
+      the doc write and retry only the pointer move. v0.1.1 retried the doc write here,
+      failed on its own doc every attempt, and wedged the store at n for good.
+    - rules/<n+1> belongs to another bump and current is still n: that bump may be between
+      its two writes, so wait once and re-read. If the same foreign doc is still there with
+      no pointer to it, it is an orphan of a bump that died between writes (or a store
+      wedged by v0.1.1): replace exactly that doc, then move the pointer.
+    A foreign doc is never adopted: reporting success on another bump's content loses this
+    call's rules and changelog entry while telling the caller they landed.
     """
     if not args.get("note"):
         return {"error": "note is required: state the trial results that forced the change and what the new rules cost"}
+    bump_id = uuid.uuid4().hex
+    seen_foreign = None
     for _ in range(BUMP_ATTEMPTS):
-        cur = store().get("rules", "current")
-        if not cur:
-            return {"error": "no rules seeded"}
-        doc = store().get("rules", _sk(cur["version"]))["doc"]
-        new = json.loads(json.dumps(doc))
-        new["version"] = doc["version"] + 1
-        if "rules" in args:
-            new["rules"] = args["rules"]
-        if "levels" in args:
-            new["levels"] = args["levels"]
-        if "acceptance" in args:
-            new["acceptance"] = args["acceptance"]
-        entry = {"version": new["version"], "date": time.strftime("%Y-%m-%d"), "note": args["note"]}
-        if args.get("cost"):
-            entry["cost"] = args["cost"]
-        new.setdefault("changelog", []).append(entry)
+        base, base_item = _current()
+        if base is None:
+            return base_item
+        new, entry = _next_doc(base_item["doc"], args)
+        v = base + 1
+        item = {"pk": "rules", "sk": _sk(v), "doc": new, "bump_id": bump_id}
+        nxt = store().get("rules", _sk(v))
         try:
-            store().put_if_absent({"pk": "rules", "sk": _sk(new["version"]), "doc": new})
-            store().put_if_version({"pk": "rules", "sk": "current", "version": new["version"]},
-                                   expected=cur["version"])
+            if nxt is None:
+                store().put_if_absent(item)
+            elif nxt.get("bump_id") == bump_id:
+                pass
+            elif seen_foreign == (base, nxt.get("bump_id")):
+                store().put_if_bump(item, expected=nxt.get("bump_id"))
+            else:
+                seen_foreign = (base, nxt.get("bump_id"))
+                _sleep(BUMP_SETTLE_S)
+                continue
+            store().put_if_version({"pk": "rules", "sk": "current", "version": v}, expected=base)
         except ConditionFailed:
-            continue
-        return {"version": new["version"], "changelog_entry": entry}
+            pass
+        cur = store().get("rules", "current")
+        mine = store().get("rules", _sk(v))
+        if cur and int(cur["version"]) >= v and mine and mine.get("bump_id") == bump_id:
+            return {"version": v, "changelog_entry": mine["doc"]["changelog"][-1]}
     return {"error": f"bump_rules lost the write race {BUMP_ATTEMPTS} times; retry"}
 
 
@@ -528,8 +584,12 @@ def seed(args):
     if store().get("rules", "current"):
         return {"error": "rules already seeded; use bump_rules / synth instead"}
     doc = args["rules"]
-    store().put({"pk": "rules", "sk": _sk(doc["version"]), "doc": doc})
-    store().put({"pk": "rules", "sk": "current", "version": doc["version"]})
+    try:
+        # Conditional so two seeds that both passed the guard above cannot both import.
+        store().put_if_absent({"pk": "rules", "sk": _sk(doc["version"]), "doc": doc})
+        store().put_if_absent({"pk": "rules", "sk": "current", "version": doc["version"]})
+    except ConditionFailed:
+        return {"error": "rules already seeded; use bump_rules / synth instead"}
     if args.get("prompts"):
         set_prompts({"prompts": args["prompts"]})
     ids = [_put_fixture(f["kind"], f["payload"], f.get("source", "seed")) for f in args.get("fixtures", [])]
