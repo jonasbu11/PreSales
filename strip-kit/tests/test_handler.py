@@ -82,6 +82,27 @@ assert call(action="get_rules_version", version=2)["version"] == 2
 g = call(action="check_gate", level="numbers-only"); assert g["status"] == "uncalibrated" and g["rules_version"] == 3, g
 g = call(action="check_gate", level="numbers-only", rules_version=2); assert g["row"]["source"] == "local"
 
+# concurrent bumps: a competing bump lands between this call's read and write; neither is lost
+st = h.store()
+real_get = st.get
+state = {"fired": False}
+def racing_get(pk, sk):
+    r = real_get(pk, sk)
+    if (pk, sk) == ("rules", "current") and not state["fired"]:
+        state["fired"] = True
+        st.get = real_get  # the inner bump reads normally
+        inner = h.bump_rules({"note": "inner racer"})
+        st.get = racing_get  # (outer still holds its stale read)
+        assert inner["version"] == 4, inner
+    return r
+st.get = racing_get
+outer = call(action="bump_rules", note="outer racer")
+st.get = real_get
+assert outer["version"] == 5, outer
+assert call(action="get_rules_version", version=4)["changelog"][-1]["note"] == "inner racer"
+assert call(action="get_rules")["version"] == 5 and call(action="get_rules")["changelog"][-1]["note"] == "outer racer"
+assert [e["note"] for e in call(action="get_rules")["changelog"][-2:]] == ["inner racer", "outer racer"]
+
 # unachievable short-circuit
 call(action="bump_rules", acceptance=dict(rules["acceptance"], status="unachievable"), note="three versions failed")
 assert call(action="check_gate", level="numbers-only")["status"] == "unachievable"

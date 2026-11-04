@@ -48,6 +48,10 @@ MAX_STRIPPED_BYTES = 200 * 1024
 
 # ---------------------------------------------------------------- storage
 
+class ConditionFailed(Exception):
+    """A conditional write found the item in a different state than expected."""
+
+
 class MemoryStore:
     """Same interface as DynamoStore; used by tests."""
 
@@ -59,6 +63,17 @@ class MemoryStore:
 
     def put(self, item):
         self.items[(item["pk"], item["sk"])] = item
+
+    def put_if_absent(self, item):
+        if (item["pk"], item["sk"]) in self.items:
+            raise ConditionFailed(f"{item['pk']}/{item['sk']} already exists")
+        self.put(item)
+
+    def put_if_version(self, item, expected):
+        cur = self.items.get((item["pk"], item["sk"]))
+        if cur is None or cur.get("version") != expected:
+            raise ConditionFailed(f"{item['pk']}/{item['sk']} is not at version {expected}")
+        self.put(item)
 
     def query(self, pk):
         return sorted(
@@ -84,6 +99,19 @@ class DynamoStore:
 
     def put(self, item):
         self.t.put_item(Item=json.loads(json.dumps(item), parse_float=Decimal))
+
+    def _put_cond(self, item, **cond):
+        try:
+            self.t.put_item(Item=json.loads(json.dumps(item), parse_float=Decimal), **cond)
+        except self.t.meta.client.exceptions.ConditionalCheckFailedException as e:
+            raise ConditionFailed(str(e)) from e
+
+    def put_if_absent(self, item):
+        self._put_cond(item, ConditionExpression="attribute_not_exists(pk)")
+
+    def put_if_version(self, item, expected):
+        self._put_cond(item, ConditionExpression="version = :v",
+                       ExpressionAttributeValues={":v": expected})
 
     def query(self, pk):
         from boto3.dynamodb.conditions import Key
@@ -181,28 +209,44 @@ def get_rules_version(args):
     return item["doc"] if item else {"error": f"no rules version {args['version']}"}
 
 
+BUMP_ATTEMPTS = 5
+
+
 def bump_rules(args):
-    """New version. Never edits in place. `note` is required and goes to the changelog."""
+    """New version. Never edits in place. `note` is required and goes to the changelog.
+
+    Two bumps racing on the same base version used to both write the same sk and the
+    loser's rules and changelog entry vanished. The new version doc is written only if
+    absent, and rules/current only if it still points at the version that was read;
+    a failed condition re-reads and retries so the second bump lands as base+2.
+    """
     if not args.get("note"):
         return {"error": "note is required: state the trial results that forced the change and what the new rules cost"}
-    doc = get_rules()
-    if "error" in doc:
-        return doc
-    new = json.loads(json.dumps(doc))
-    new["version"] = doc["version"] + 1
-    if "rules" in args:
-        new["rules"] = args["rules"]
-    if "levels" in args:
-        new["levels"] = args["levels"]
-    if "acceptance" in args:
-        new["acceptance"] = args["acceptance"]
-    entry = {"version": new["version"], "date": time.strftime("%Y-%m-%d"), "note": args["note"]}
-    if args.get("cost"):
-        entry["cost"] = args["cost"]
-    new.setdefault("changelog", []).append(entry)
-    store().put({"pk": "rules", "sk": _sk(new["version"]), "doc": new})
-    store().put({"pk": "rules", "sk": "current", "version": new["version"]})
-    return {"version": new["version"], "changelog_entry": entry}
+    for _ in range(BUMP_ATTEMPTS):
+        cur = store().get("rules", "current")
+        if not cur:
+            return {"error": "no rules seeded"}
+        doc = store().get("rules", _sk(cur["version"]))["doc"]
+        new = json.loads(json.dumps(doc))
+        new["version"] = doc["version"] + 1
+        if "rules" in args:
+            new["rules"] = args["rules"]
+        if "levels" in args:
+            new["levels"] = args["levels"]
+        if "acceptance" in args:
+            new["acceptance"] = args["acceptance"]
+        entry = {"version": new["version"], "date": time.strftime("%Y-%m-%d"), "note": args["note"]}
+        if args.get("cost"):
+            entry["cost"] = args["cost"]
+        new.setdefault("changelog", []).append(entry)
+        try:
+            store().put_if_absent({"pk": "rules", "sk": _sk(new["version"]), "doc": new})
+            store().put_if_version({"pk": "rules", "sk": "current", "version": new["version"]},
+                                   expected=cur["version"])
+        except ConditionFailed:
+            continue
+        return {"version": new["version"], "changelog_entry": entry}
+    return {"error": f"bump_rules lost the write race {BUMP_ATTEMPTS} times; retry"}
 
 
 # ---------------------------------------------------------------- fixtures
