@@ -2,6 +2,25 @@
 
 All notable changes to strip-kit and the strip skills. Versions are git tags; users deploying strip-kit should read the entry for every version between theirs and the one they are moving to.
 
+## v0.1.2 (2026-11-03)
+
+Security release. Advisory: [GHSA-5549-q5ww-6p64](https://github.com/jonasbu11/PreSales/security/advisories/GHSA-5549-q5ww-6p64). Redeploy with `sam build && sam deploy`; the table is retained and no seed step is needed.
+
+### Fixed (advisory)
+- `bump_rules` no longer wedges the store. In v0.1.1, if the version doc `rules/<n+1>` landed and the pointer move on `rules/current` then failed, every retry and every later bump failed on its own leftover doc and the rules could never be bumped again. Each version doc now carries the `bump_id` of the call that wrote it. A bump that finds its own doc at `n+1` retries only the pointer move. A bump that finds another call's doc there with `rules/current` still at `n` waits once, then replaces that exact orphan. A bump reports success only when the doc at its version is its own, so it never claims another caller's doc as its write.
+- **Unwedging an existing store:** after upgrading, the next `bump_rules` call replaces the orphan `rules/<n+1>` and lands as `n+1`. Alternatively, delete the orphan item (`pk = rules`, `sk = <n+1 zero-padded to 8 digits>`) by hand before bumping. A store is wedged if `rules/<n+1>` exists while `rules/current` points at `n`.
+
+### Fixed
+- `seed` writes `rules/<v>` and `rules/current` conditionally; two concurrent seeds that both pass the `rules/current` guard can no longer both import (duplicate fixtures, overwritten rules). The second returns `rules already seeded`.
+- `get_rules` and `bump_rules` return `{"error": "rules/current points at missing version <n>"}` when the pointer's doc is gone, instead of an opaque `TypeError`.
+- `DynamoStore.put_if_version` aliases the `version` attribute through `ExpressionAttributeNames`.
+
+### Added
+- `tests/test_handler.py` runs the v0.1.2 cases on fresh stores, each reported independently: lost pointer move after the doc landed, orphan from a wedged store, competing in-flight bump never adopted, dangling `rules/current`, concurrent seeds.
+
+### Changed
+- Repository topic `sample` replaced with `aws-sam`.
+
 ## v0.1.1 (2026-11-03)
 
 Security release. Advisory: [GHSA-q56c-76gq-653v](https://github.com/jonasbu11/PreSales/security/advisories/GHSA-q56c-76gq-653v). Redeploy with `sam build && sam deploy`; the table is retained and no seed step is needed.
