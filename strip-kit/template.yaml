@@ -52,8 +52,14 @@ Resources:
           DEFAULT_MODEL: !Ref DefaultModel
           ADVERSARY_MODEL: !Ref AdversaryModel
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref Table
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:Query
+                - dynamodb:UpdateItem
+              Resource: !GetAtt Table.Arn
         - Statement:
             - Effect: Allow
               Action:
