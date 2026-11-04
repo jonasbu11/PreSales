@@ -2,8 +2,8 @@
 
 ## Security maintainer
 
-[Jonas Bull] ([@jonasbu11](https://github.com/jonasbu11)) is the sole
-security maintainer for this project and handles all reports directly.
+Jonas Bull ([@jonasbu11](https://github.com/jonasbu11)) is the sole security
+maintainer and handles all reports directly.
 
 ## What this project protects
 
@@ -35,47 +35,31 @@ Out of scope:
 
 Please report privately, not in a public issue:
 
-- Preferred: **GitHub private vulnerability reporting** on this repo
-  (Security tab → Report a vulnerability)
-- Or email: [jb@jonasbull.com]
+- Preferred: **GitHub private vulnerability reporting** (Security tab →
+  Report a vulnerability)
+- Or email: jb@jonasbull.com
 
-Include the version, a description of the issue, reproduction steps or a
-proof of concept, and the impact you believe it has.
+Include the commit or release tag, the identifier class or rule that fails, a
+fixture that reproduces it, and the resulting leak.
 
 ## What to expect
 
-- Acknowledgement within [3] business days
-- An initial assessment within [7] business days
-- Fix or mitigation timeline once the issue is confirmed
-
-This is a small project maintained by one person, so these are best-effort
-targets rather than contractual SLAs.
+Best-effort, sole maintainer: acknowledgement in 3 business days, initial
+assessment in 7. Once confirmed, a fix or a documented mitigation.
 
 ## Disclosure
 
-Coordinated disclosure. Once a fix is available I'll publish an advisory
-and credit you by name or handle, whichever you prefer. If the issue
-warrants it, I'll request a CVE through the GitHub CNA.
+Coordinated. Fix first, then an advisory crediting you by name or handle,
+whichever you prefer. If the issue warrants it, a CVE via the GitHub CNA.
 
-If you get no response after [14] days and have chased once, you're free to
-disclose publicly.
+No response after 14 days and one chase, and you're free to disclose.
 
-## Credit
+## Scope of supported code
 
-Reporters are credited in the advisory and release notes unless they ask
-not to be.
-
-## Scope
-
-In scope: the code in this repository and its published release artifacts.
-
-Out of scope:
-- Issues in third-party dependencies (report those upstream)
-- [Your hosted instance / demo, if any]
-- Missing hardening headers with no demonstrable impact
-- Automated scanner output with no reproduction
+`main` and the latest tagged release only. Older commits and unmerged branches
+get no fixes.
 
 ## Safe harbour
 
-Good-faith testing against this project's own code and a locally-run copy
-is authorised. Don't touch other people's deployments or data.
+Good-faith testing against the code and your own local deploy is authorised.
+Don't touch other people's AWS accounts or the client material in them.
