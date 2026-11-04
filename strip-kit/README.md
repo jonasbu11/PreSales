@@ -43,7 +43,9 @@ The skills live in this repo at `skills/strip` and `skills/strip-lab`, next to t
 
 See the docstring at the top of `lambda/handler.py`. Every call is `{"action": "<name>", ...}` and returns JSON. `strip-kit/tests/test_handler.py` runs the whole loop against an in-memory store with Bedrock stubbed:
 
-    cd strip-kit && pip install boto3 && python3 tests/test_handler.py
+    cd strip-kit && pip install boto3 pyyaml && python3 tests/test_handler.py && python3 tests/test_template.py
+
+`tests/test_template.py` checks the SAM template's IAM scope and data-safety properties (region-scoped Bedrock access, explicit DynamoDB actions, retained table, bounded concurrency).
 
 ## What is deliberately not here
 
