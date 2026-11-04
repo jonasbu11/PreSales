@@ -20,7 +20,7 @@ Please report privately, not in a public issue:
 
 - Preferred: **GitHub private vulnerability reporting** on this repo
   (Security tab → Report a vulnerability)
-- Or email: [you@example.com]
+- Or email: [jb@jonasbull.com]
 
 Include the version, a description of the issue, reproduction steps or a
 proof of concept, and the impact you believe it has.
