@@ -413,12 +413,19 @@ def strip_trial(args):
     try:
         j = extract_json(txt)
         guess_ord = int(j["candidate"])
-        guess_id = lineup_ids[guess_ord - 1]
     except Exception as e:  # noqa: BLE001
         trial["error"] = "unparseable adversary reply"
         trial["raw"] = txt[:2000]
         store().put(trial)
         return {"trial": tid, "error": f"unparseable adversary reply: {e}", "head": txt[:500]}
+    if not 1 <= guess_ord <= len(lineup_ids):
+        # Out-of-range answers are not guesses. 0 and negatives would otherwise index from
+        # the end of the list and be scored as if the adversary had picked that candidate.
+        trial["error"] = f"candidate {guess_ord} outside lineup 1..{len(lineup_ids)}"
+        trial["raw"] = txt[:2000]
+        store().put(trial)
+        return {"trial": tid, "error": trial["error"], "head": txt[:500]}
+    guess_id = lineup_ids[guess_ord - 1]
 
     trial.update({"guess_fixture_id": guess_id, "correct": guess_id == fid,
                   "confidence": j.get("confidence"), "rationale": j.get("rationale"),
