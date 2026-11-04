@@ -33,6 +33,10 @@ To change the seed, edit `seed/rules.json`, `seed/fixtures.json`, `seed/prompts.
 
 The handler is also packaged as `strip-kit` (Python 3.12+, depends on `boto3`). It installs as the package `strip_kit`; `lambda/` stays the SAM code directory.
 
+    pip install strip-kit
+
+or straight from the repo:
+
     pip install "git+https://github.com/jonasbu11/PreSales.git#subdirectory=strip-kit"
 
     from strip_kit import handler

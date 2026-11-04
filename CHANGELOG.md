@@ -2,13 +2,13 @@
 
 All notable changes to strip-kit and the strip skills. Versions are git tags; users deploying strip-kit should read the entry for every version between theirs and the one they are moving to.
 
-## v0.1.3 (unreleased)
+## v0.1.3 (2026-11-04)
 
 ### Added
 - `strip-kit/pyproject.toml`: the handler is installable as the `strip-kit` distribution (Python 3.12+, depends on `boto3`) and imports as `strip_kit.handler`. `lambda/` is mapped to the `strip_kit` package, so the SAM template is unchanged.
 - `.github/workflows/publish-strip-kit.yml`: a `vX.Y.Z` tag runs the tests, builds, checks the metadata, verifies that the version matches the tag, and publishes to PyPI through Trusted Publishing.
 
-No behavior change to the Lambda.
+Published to PyPI: `pip install strip-kit`. No behavior change to the Lambda.
 
 ## v0.1.2 (2026-11-03)
 
