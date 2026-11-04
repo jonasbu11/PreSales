@@ -69,8 +69,8 @@ Resources:
                 - bedrock:InvokeModel
                 - bedrock:InvokeModelWithResponseStream
               Resource:
-                - arn:aws:bedrock:*::foundation-model/*
-                - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/*
+                - !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/*
+                - !Sub arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/*
       Tags:
         app: strip-kit
 
