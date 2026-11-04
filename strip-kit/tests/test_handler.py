@@ -127,4 +127,114 @@ assert call(action="check_gate", level="numbers-only")["status"] == "unachievabl
 assert "unknown action" in h.handler({"action": "zzz"})["error"]
 assert h.handler({"body": json.dumps({"action": "ping"})})["ok"]
 assert h.extract_json('text {"a":[1,2]} trailing') == {"a": [1, 2]}
+
+# ---------------------------------------------------------------- v0.1.2 cases
+# Each case runs on a fresh seeded store so one failure cannot mask another.
+
+def fresh():
+    h._store = h.MemoryStore()
+    assert h.handler(json.loads(json.dumps(seed)))["rules_version"] == 2
+    return h.store()
+
+
+h._sleep = lambda s: None  # bump_rules backs off between attempts; no wall-clock wait in tests
+
+
+def case_pointer_move_lost_after_doc_landed():
+    """put_if_absent wrote rules/3, then the pointer move failed with rules/current still at 2.
+    v0.1.1 retried put_if_absent on rules/3, failed every attempt, and every later bump failed
+    the same way: the store was wedged at version 2 for good."""
+    st = fresh()
+    real = st.put_if_version
+    left = {"n": 1}
+
+    def flaky(item, expected):
+        if left["n"]:
+            left["n"] -= 1
+            assert st.get("rules", "00000003"), "doc should have landed before the pointer move"
+            assert st.get("rules", "current")["version"] == 2
+            raise h.ConditionFailed("injected: pointer move lost")
+        return real(item, expected)
+
+    st.put_if_version = flaky
+    b = h.handler({"action": "bump_rules", "rules": ["after the lost pointer move"], "note": "lost pointer move"})
+    st.put_if_version = real
+    assert "error" not in b and b["version"] == 3, b
+    r = h.handler({"action": "get_rules"})
+    assert r["version"] == 3 and r["rules"] == ["after the lost pointer move"], r
+    assert r["changelog"][-1]["note"] == "lost pointer move", r["changelog"][-1]
+    b = h.handler({"action": "bump_rules", "note": "next bump"})
+    assert b.get("version") == 4, b
+
+
+def case_orphan_from_wedged_store():
+    """A store wedged by v0.1.1: rules/3 exists with no pointer to it. A patched bump_rules
+    replaces the orphan and lands as version 3 with its own content."""
+    st = fresh()
+    st.put({"pk": "rules", "sk": "00000003", "doc": {"version": 3, "rules": ["orphan"], "changelog": []}})
+    b = h.handler({"action": "bump_rules", "rules": ["real"], "note": "over the orphan"})
+    assert "error" not in b and b["version"] == 3, b
+    r = h.handler({"action": "get_rules"})
+    assert r["rules"] == ["real"] and r["changelog"][-1]["note"] == "over the orphan", r
+
+
+def case_foreign_doc_is_never_adopted():
+    """Regression guard (v0.1.1 passes this). A competing bump has written rules/3 but not yet
+    moved rules/current. This bump must not adopt that doc and report success on it; it waits,
+    sees the competitor's pointer move, and lands as 4 with its own content."""
+    st = fresh()
+    real_get = st.get
+    phase = {"n": 0}
+
+    def racing_get(pk, sk):
+        if (pk, sk) == ("rules", "00000002") and phase["n"] == 0:
+            phase["n"] = 1  # competitor's doc lands, its pointer move is still in flight
+            inner = {"version": 3, "rules": ["inner"], "changelog": [{"version": 3, "note": "inner"}]}
+            st.put({"pk": "rules", "sk": "00000003", "doc": inner, "bump_id": "competitor"})
+        elif (pk, sk) == ("rules", "current") and phase["n"] == 1:
+            phase["n"] = 2  # competitor's pointer move completes
+            st.put({"pk": "rules", "sk": "current", "version": 3})
+        return real_get(pk, sk)
+
+    st.get = racing_get
+    b = h.handler({"action": "bump_rules", "rules": ["outer"], "note": "outer"})
+    st.get = real_get
+    assert b.get("version") == 4, b
+    assert h.handler({"action": "get_rules_version", "version": 3})["rules"] == ["inner"]
+    r = h.handler({"action": "get_rules"})
+    assert r["rules"] == ["outer"] and r["changelog"][-1]["note"] == "outer", r
+
+
+def case_current_points_at_missing_version():
+    st = fresh()
+    st.put({"pk": "rules", "sk": "current", "version": 999})
+    e = h.handler({"action": "get_rules"})
+    assert e == {"error": "rules/current points at missing version 999"}, e
+    e = h.handler({"action": "bump_rules", "note": "x"})
+    assert e == {"error": "rules/current points at missing version 999"}, e
+
+
+def case_concurrent_seeds():
+    """Two seeds that both pass the rules/current guard: the second must refuse, not import."""
+    st = fresh()
+    n = len(h.handler({"action": "list_fixtures", "include_retired": True}))
+    real_get = st.get
+    st.get = lambda pk, sk: None if (pk, sk) == ("rules", "current") else real_get(pk, sk)
+    e = h.handler(json.loads(json.dumps(seed)))
+    st.get = real_get
+    assert "already seeded" in e.get("error", ""), e
+    assert len(h.handler({"action": "list_fixtures", "include_retired": True})) == n
+
+
+failed = []
+for name, fn in list(globals().items()):
+    if name.startswith("case_") and callable(fn):
+        try:
+            fn()
+            print("ok:", name)
+        except Exception as ex:  # noqa: BLE001
+            failed.append(name)
+            print("FAIL:", name, "->", repr(ex)[:300])
+if failed:
+    sys.exit(f"{len(failed)} case(s) failed: {', '.join(failed)}")
 print("all checks passed;", len(calls), "stubbed model calls")
