@@ -1,0 +1,6 @@
+{
+  "name": "nclouds-guardrails",
+  "version": "0.1.0",
+  "description": "Three walls for Claude at work: nothing gets sent without your typed approval, nothing gets filed in Drive before Claude has looked at the target, and nothing gets written to Rocketlane before Claude has looked at the project or task.",
+  "author": { "name": "nClouds" }
+}

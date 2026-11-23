@@ -8,6 +8,10 @@ For presales stuff.
 - `skills/strip`: de-identify client or engagement material before any of it leaves for an outside model. Reads its rules and calibration gate from the strip-kit function.
 - `skills/strip-lab`: calibrate those rules with invented fixtures and re-identification trials on Bedrock. Opens or closes the gate `strip` checks.
 
+## Plugins
+
+- `plugins/nclouds-guardrails`: three guards for Claude at work. No send without your typed approval, no Drive filing before Claude has looked at the target, no Rocketlane write before Claude has looked at the project or task. See `plugins/nclouds-guardrails/README.md`.
+
 ## strip-kit
 
 `strip-kit/` is the backend the two strip skills call: one Lambda, one DynamoDB table, Bedrock as the adversary. Deploy once per AWS account with SAM, seed once, then each user points their AWS connector at that account. Deploy, seed and first-run steps are in `strip-kit/README.md`.
