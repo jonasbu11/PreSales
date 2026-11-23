@@ -2,6 +2,13 @@
 
 All notable changes to strip-kit and the strip skills. Versions are git tags; users deploying strip-kit should read the entry for every version between theirs and the one they are moving to.
 
+## 2026-11-23
+
+### Added
+- `plugins/nclouds-guardrails` 0.1.0: a Claude plugin with three guards. Email and Slack sends need the user's typed approval, Drive writes need the target read first, and Rocketlane writes need the project or task read first. It collects nothing. Install and test steps are in its README.
+
+No change to strip-kit or the strip skills. Nothing to redeploy.
+
 ## v0.1.3 (2026-11-04)
 
 ### Added

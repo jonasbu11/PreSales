@@ -1,0 +1,9 @@
+{
+  "enabled": true,
+  "checks": {
+    "sends": true,
+    "drive_read_first": true,
+    "rocketlane_read_first": true
+  },
+  "slack_send_without_approval": []
+}
