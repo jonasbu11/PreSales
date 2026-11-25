@@ -1,0 +1,35 @@
+{
+  "pm_rate": "loe",
+  "pm_rate_fallback": 0.10,
+  "pm_placement": "row",
+  "pm_column": "Project Manager",
+  "risk_rate": "loe",
+  "risk_rate_fallback": 0.10,
+  "risk_field_allowed": [0, 5, 10],
+  "engineering_column": "Blended Rate US",
+  "blended_rate": 200,
+  "hour_rounding": "none",
+  "basis_column": true,
+  "basis_column_name": "Basis",
+  "hide_from_sow_patterns": ["check-in", "status report", "review cycle", "demonstration", "integration qa"],
+  "loading_section": "Program Management and Risk",
+  "default_section": "Scope",
+  "skeleton_policy": "hide",
+  "keep_template_rows": ["Compliance Certifications"],
+  "section_refs": "names",
+  "prerequisite_prefix": "Pre-requirement: ",
+  "milestone_default": [["Project Kickoff", 50], ["Project Completion Sign Off", 50]],
+  "milestone_show_dates": false,
+  "details_defaults": {
+    "Country": "US",
+    "PM involvement level": "Light",
+    "Do we need to wait until Funding is verified before we start work": "No"
+  },
+  "practice_map": {
+    "data-ai": {"Core Practice": "Data & AI"},
+    "map-assess": {"Core Practice": "Migration & Modernization", "Sub practice": "Assess"},
+    "mmo": {"Core Practice": "Migration & Modernization", "Sub practice": "MMMO"}
+  },
+  "require_crm_link": true,
+  "max_fix_rounds": 2
+}

@@ -2,6 +2,13 @@
 
 All notable changes to strip-kit and the strip skills. Versions are git tags; users deploying strip-kit should read the entry for every version between theirs and the one they are moving to.
 
+## 2026-11-25
+
+### Added
+- `plugins/nclouds-sa-zoma` 0.1.0: a Claude plugin that takes a finished SOW context and LOE workbook and writes them into Zoma over the Zoma connector, which it declares. Modes: plan (writes nothing), push, check (a 16-item gate against what Zoma holds) and finish (generate, file, submit, status, each outbound step on the SA's go). PM share, risk rate and role columns are set in its `config.json`. First version, for team feedback; push and finish have not yet run against a live opportunity.
+
+No change to strip-kit or the strip skills. Nothing to redeploy.
+
 ## 2026-11-23
 
 ### Added

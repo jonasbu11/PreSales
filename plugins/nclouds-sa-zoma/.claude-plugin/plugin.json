@@ -1,0 +1,9 @@
+{
+  "name": "nclouds-sa-zoma",
+  "version": "0.1.0",
+  "description": "Push a finished SOW scope and LOE into Zoma, check what Zoma holds against them, and carry it through to a generated SOW.",
+  "author": {
+    "name": "nClouds",
+    "email": "sa@nclouds.com"
+  }
+}

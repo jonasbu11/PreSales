@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "zoma": {
+      "type": "http",
+      "url": "https://mcp.zoma.ai/mcp"
+    }
+  }
+}
