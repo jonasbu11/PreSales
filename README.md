@@ -11,7 +11,7 @@ For presales stuff.
 ## Plugins
 
 - `plugins/nclouds-guardrails`: three guards for Claude at work. No send without your typed approval, no Drive filing before Claude has looked at the target, no Rocketlane write before Claude has looked at the project or task. See `plugins/nclouds-guardrails/README.md`.
-- `plugins/nclouds-sa-zoma`: push a finished SOW scope and LOE into Zoma, check what Zoma holds against them, and carry it through to a generated SOW. Declares the Zoma connector. Start with `skills/nclouds-sa-zoma/SKILL.md`.
+- `plugins/nclouds-sa-zoma`: push a finished SOW scope and LOE into Zoma, check what Zoma holds against them, and carry it through to a generated SOW. Declares the Zoma connector. See `plugins/nclouds-sa-zoma/README.md`.
 
 ## strip-kit
 
